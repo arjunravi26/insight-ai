@@ -36,12 +36,17 @@ class Pipeline:
 
     def predict(self,query,selected_model_idx):
         augmnet_query_pipeline = AugmentPromptPipeline(embedding_model=self.embedding_model,k=3,query=query)
-        augmnet_query,scores = augmnet_query_pipeline.start_augment_prompt()
+        augmnet_query = augmnet_query_pipeline.start_augment_prompt()
+        if not augmnet_query:
+            return "I don't know about this topic. You can try these topics", ["What is Generative AI",
+            "Explain about bias-variance trade-off","Explain neural networks."]
+        print("Aguemneted Promt")
+        print("-"*100)
         # print(scores,augmnet_query)
         print(f'before model {selected_model_idx}')
         response = self.llms[selected_model_idx].invoke(augmnet_query)
         print(response)
-        if selected_model_idx == 0:
+        if selected_model_idx ==  0:
             text = response.text()
         elif selected_model_idx == 1:
             text = response.content
