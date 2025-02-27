@@ -1,0 +1,17 @@
+langchain_community
+llama-cpp-python
+datasets
+pinecone-client
+huggingface_hub
+gpt4all
+langchain-pinecone
+streamlit
+sentence-transformers
+langchain_huggingface
+langchain-pinecone
+spacy
+transformers
+pypdf
+langchain_google_genai
+ipykernel
+python-dotenv
