@@ -1,7 +1,5 @@
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_huggingface.llms import HuggingFaceEndpoint
 from langchain_google_genai import ChatGoogleGenerativeAI
-from transformers import pipeline
 from langchain_mistralai import ChatMistralAI
 from langchain_together import Together
 from dotenv import load_dotenv
