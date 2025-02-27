@@ -1,11 +1,11 @@
 
-# Chatbot-ai
+# insight-ai
 
 A chatbot designed to respond to AI-related queries.
 
 ## Overview
 
-Chatbot-ai is an interactive platform that leverages advanced Natural Language Processing (NLP) techniques to provide accurate and relevant answers to questions about Artificial Intelligence. The chatbot is built using Python and integrates several key technologies to enhance its functionality.
+insight-ai is an interactive platform that leverages advanced Natural Language Processing (NLP) techniques to provide accurate and relevant answers to questions about Artificial Intelligence. The chatbot is built using Python and integrates several key technologies to enhance its functionality.
 
 ## Features
 
@@ -20,8 +20,8 @@ To set up the Chatbot-ai locally, follow these steps:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/arjunravi26/Chatbot-ai.git
-   cd Chatbot-ai
+   git clone https://github.com/arjunravi26/insight-ai.git
+   cd insight-ai
    ```
 
 2. **Create a virtual environment** (optional but recommended):
