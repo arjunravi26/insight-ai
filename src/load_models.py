@@ -22,7 +22,7 @@ class CreateModels:
             raise ValueError("MISTRAL token is not set in the environment.")
         self.together_key = os.getenv('TOGHTHER_API_KEY')
         if self.together_key is None:
-            raise ValueError("TOGETHER  token is not set in the environment.")
+            raise ValueError("TOGETHER token is not set in the environment.")
 
     def create_embedding(self):
 
