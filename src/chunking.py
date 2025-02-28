@@ -6,7 +6,7 @@ class Chunking:
     def __init__(self):
         self.nlp = spacy.load("en_core_web_sm")
         self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-    def dynamic_chunking(self,text, max_token=256, overlap=50):
+    def dynamic_chunking(self,text, max_token=256):
         chunks = []
         current_chunk = []
         token_length = 0
