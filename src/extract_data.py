@@ -16,7 +16,7 @@ class ExtractData:
     def extract(self, pdf_documents):
         chapter_no = 0
         chapter_contents = ""
-        chapters = []
+        chapters =  []
 
         for doc in pdf_documents:
             text = doc.page_content
