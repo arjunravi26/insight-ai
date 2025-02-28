@@ -41,7 +41,7 @@ class VectorDB:
                 for text, embedding in zip(batch, batch_embeddings):
                     chunk_id = str(uuid.uuid4())
                     self.upsert_data.append({'id':chunk_id, 'values':embedding,
-                              'metadata': {'title':chapter['title'],'chapter_page_no':chapter['chapter_page_no'],'content': text}})
+                            'metadata': {'title':chapter['title'],'chapter_page_no':chapter['chapter_page_no'],'content': text}})
     def insert_data(self):
         batch_size = 100
         status = self.pc_index.describe_index_stats()
