@@ -16,7 +16,7 @@ class ExtractData:
     def extract(self, pdf_documents):
         chapter_no = 0
         chapter_contents = ""
-        chapters =  []
+        chapters = []
 
         for doc in pdf_documents:
             text = doc.page_content
@@ -44,9 +44,9 @@ class ExtractData:
             if chapter_contents:
                 chapter_no += 1
                 chapters.append({
-                            "chapter_no": f'CHAPTER {chapter_no}',
-                            "content": chapter_contents,
-                            "title": doc.metadata['title'],
-                            "page_label": doc.metadata['page_label']
-                        })
+                    "chapter_no": f'CHAPTER {chapter_no}',
+                    "content": chapter_contents,
+                    "title": doc.metadata['title'],
+                    "page_label": doc.metadata['page_label']
+                })
         return self.chapters
