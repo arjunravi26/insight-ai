@@ -8,7 +8,6 @@ class DataIngestion:
     def __init__(self):
         pass
 
-
     def load_data(self):
         pdf_folder = "D:\BroCamp\Projects\Chatbot-ai\Data"
         try:
