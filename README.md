@@ -1,5 +1,5 @@
 
-# insight-ai
+# Insight-AI
 
 A chatbot designed to respond to AI-related queries.
 
