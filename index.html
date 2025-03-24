@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Women's Evolution: Kitchen to Workspace</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f7;
+      color: #1d1d1f;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Navigation */
+    nav {
+      background-color: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px);
+      position: fixed;
+      width: 100%;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 600;
+      background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #1d1d1f;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: #ff9a9e;
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 154, 158, 0.7) 0%, rgba(250, 208, 196, 0.7) 100%);
+      z-index: -1;
+    }
+
+    .hero-content {
+      max-width: 600px;
+    }
+
+    .hero h1 {
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      background: linear-gradient(to right, #414345, #232526);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 24px;
+      margin-bottom: 40px;
+      color: #333;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 15px 40px;
+      background: #1d1d1f;
+      color: white;
+      border-radius: 30px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Timeline Section */
+    .timeline-section {
+      padding: 120px 0;
+      background-color: white;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 48px;
+      margin-bottom: 80px;
+      background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .timeline {
+      position: relative;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .timeline::after {
+      content: '';
+      position: absolute;
+      width: 6px;
+      background: linear-gradient(to bottom, #ff9a9e, #fad0c4);
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      margin-left: -3px;
+      border-radius: 10px;
+    }
+
+    .timeline-item {
+      position: relative;
+      width: 50%;
+      padding: 20px 40px;
+      margin-bottom: 60px;
+    }
+
+    .timeline-item:nth-child(odd) {
+      left: 0;
+    }
+
+    .timeline-item:nth-child(even) {
+      left: 50%;
+    }
+
+    .timeline-content {
+      padding: 30px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+      position: relative;
+      transition: transform 0.3s;
+    }
+
+    .timeline-content:hover {
+      transform: translateY(-5px);
+    }
+
+    .timeline-year {
+      position: absolute;
+      top: 0;
+      width: 80px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+      color: white;
+      border-radius: 5px;
+      font-weight: 600;
+    }
+
+    .timeline-item:nth-child(odd) .timeline-year {
+      right: -40px;
+    }
+
+    .timeline-item:nth-child(even) .timeline-year {
+      left: -40px;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: white;
+      border: 4px solid #ff9a9e;
+      top: 20px;
+      z-index: 10;
+    }
+
+    .timeline-item:nth-child(odd) .timeline-dot {
+      right: -12.5px;
+    }
+
+    .timeline-item:nth-child(even) .timeline-dot {
+      left: -12.5px;
+    }
+
+    .timeline-content h3 {
+      font-size: 24px;
+      margin-bottom: 15px;
+      color: #1d1d1f;
+    }
+
+    .timeline-content p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    /* Stories Section */
+    .stories-section {
+      padding: 120px 0;
+      background-color: #f5f5f7;
+    }
+
+    .stories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 40px;
+      margin-top: 60px;
+    }
+
+    .story-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s;
+    }
+
+    .story-card:hover {
+      transform: translateY(-10px);
+    }
+
+    .story-image {
+      height: 200px;
+      overflow: hidden;
+    }
+
+    .story-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s;
+    }
+
+    .story-card:hover .story-image img {
+      transform: scale(1.1);
+    }
+
+    .story-content {
+      padding: 30px;
+    }
+
+    .story-content h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .story-content p {
+      color: #666;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .read-more {
+      color: #ff9a9e;
+      text-decoration: none;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Statistics Section */
+    .stats-section {
+      padding: 120px 0;
+      background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 100%);
+      color: white;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 40px;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+    }
+
+    .stat-number {
+      font-size: 64px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .stat-title {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+
+    /* Footer */
+    footer {
+      background-color: #1d1d1f;
+      color: white;
+      padding: 80px 0 30px;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 40px;
+      margin-bottom: 60px;
+    }
+
+    .footer-logo {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .footer-desc {
+      color: #999;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .footer-links h4 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: white;
+    }
+
+    .footer-links ul {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 10px;
+    }
+
+    .footer-links a {
+      color: #999;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .footer-links a:hover {
+      color: #ff9a9e;
+    }
+
+    .copyright {
+      text-align: center;
+      color: #666;
+      padding-top: 30px;
+      border-top: 1px solid #333;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 48px;
+      }
+
+      .timeline::after {
+        left: 31px;
+      }
+
+      .timeline-item {
+        width: 100%;
+        padding-left: 70px;
+        padding-right: 25px;
+      }
+
+      .timeline-item:nth-child(even) {
+        left: 0%;
+      }
+
+      .timeline-dot {
+        left: 18px;
+      }
+
+      .timeline-item:nth-child(odd) .timeline-dot {
+        right: auto;
+        left: 18px;
+      }
+
+      .timeline-item:nth-child(even) .timeline-dot {
+        left: 18px;
+      }
+
+      .timeline-year {
+        left: -40px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="container nav-container">
+      <div class="logo">Evolution</div>
+      <div class="nav-links">
+        <a href="#timeline">Timeline</a>
+        <a href="#stories">Stories</a>
+        <a href="#stats">Statistics</a>
+        <a href="#about">About</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container hero-content">
+      <h1>From Kitchen to Boardroom</h1>
+      <p>Celebrating the remarkable journey of women breaking barriers and redefining roles in society.</p>
+      <a href="#timeline" class="cta-button">Explore the Journey</a>
+    </div>
+  </section>
+
+  <!-- Timeline Section -->
+  <section id="timeline" class="timeline-section">
+    <div class="container">
+      <h2 class="section-title">The Evolution</h2>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">1920s</div>
+          <div class="timeline-content">
+            <h3>The Traditional Role</h3>
+            <p>In the early 20th century, women were primarily expected to be homemakers. Their domain was the kitchen and childcare, with limited opportunities for education or careers outside the home.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">1940s</div>
+          <div class="timeline-content">
+            <h3>Wartime Workforce</h3>
+            <p>During World War II, women entered the workforce in unprecedented numbers, taking on factory jobs and other roles previously held by men, proving their capabilities beyond the domestic sphere.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">1960s</div>
+          <div class="timeline-content">
+            <h3>The Feminist Movement</h3>
+            <p>The second wave of feminism challenged traditional gender roles, with women demanding equal rights in education, workplace, and politics, marking a significant shift in societal perceptions.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">1980s</div>
+          <div class="timeline-content">
+            <h3>Breaking the Glass Ceiling</h3>
+            <p>Women began entering corporate leadership roles and challenging the "glass ceiling," though progress was slow and barriers remained significant.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2000s</div>
+          <div class="timeline-content">
+            <h3>Tech Revolution</h3>
+            <p>The digital age opened new opportunities for women in technology, entrepreneurship, and remote work, providing flexibility and challenging traditional workplace structures.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2020s</div>
+          <div class="timeline-content">
+            <h3>Leadership Reimagined</h3>
+            <p>Today, women are CEOs, political leaders, astronauts, and innovators, continuously redefining what leadership looks like and inspiring future generations to dream without limitations.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stories Section -->
+  <section id="stories" class="stories-section">
+    <div class="container">
+      <h2 class="section-title">Inspiring Stories</h2>
+
+      <div class="stories-grid">
+        <div class="story-card">
+          <div class="story-image">
+            <img src="/api/placeholder/400/320" alt="placeholder" />
+          </div>
+          <div class="story-content">
+            <h3>From Home Chef to Restaurant Empire</h3>
+            <p>How Maria Gonzalez transformed her passion for cooking into a successful restaurant chain while challenging industry norms.</p>
+            <a href="#" class="read-more">Read her story →</a>
+          </div>
+        </div>
+
+        <div class="story-card">
+          <div class="story-image">
+            <img src="/api/placeholder/400/320" alt="placeholder" />
+          </div>
+          <div class="story-content">
+            <h3>Breaking Barriers in Tech</h3>
+            <p>Sarah Chen's journey from coding in her bedroom to becoming a CTO at a Fortune 500 company, mentoring young women along the way.</p>
+            <a href="#" class="read-more">Read her story →</a>
+          </div>
+        </div>
+
+        <div class="story-card">
+          <div class="story-image">
+            <img src="/api/placeholder/400/320" alt="placeholder" />
+          </div>
+          <div class="story-content">
+            <h3>Rural Women Leaders</h3>
+            <p>How a collective of women farmers in rural areas revolutionized sustainable agriculture while challenging traditional gender roles.</p>
+            <a href="#" class="read-more">Read her story →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Statistics Section -->
+  <section id="stats" class="stats-section">
+    <div class="container">
+      <h2 class="section-title" style="color: white;">Progress in Numbers</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">41%</div>
+          <div class="stat-title">Global Workforce</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">8.8%</div>
+          <div class="stat-title">Fortune 500 CEOs</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">26%</div>
+          <div class="stat-title">Global Parliament</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">34%</div>
+          <div class="stat-title">STEM Graduates</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="about">
+    <div class="container">
+      <div class="footer-content">
+        <div>
+          <div class="footer-logo">Evolution</div>
+          <p class="footer-desc">A celebration of women's journey from traditional roles to modern workspaces, highlighting achievements, challenges, and ongoing evolution.</p>
+        </div>
+
+        <div class="footer-links">
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="#timeline">Timeline</a></li>
+            <li><a href="#stories">Stories</a></li>
+            <li><a href="#stats">Statistics</a></li>
+            <li><a href="#about">About</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Research</a></li>
+            <li><a href="#">Historical Archives</a></li>
+            <li><a href="#">Interviews</a></li>
+            <li><a href="#">Documentaries</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h4>Join the Movement</h4>
+          <ul>
+            <li><a href="#">Mentorship Programs</a></li>
+            <li><a href="#">Support Organizations</a></li>
+            <li><a href="#">Educational Resources</a></li>
+            <li><a href="#">Community Events</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="copyright">
+        <p>© 2025 Women's Evolution Project. Created for Women's Day Competition.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
