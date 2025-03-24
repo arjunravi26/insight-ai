@@ -62,7 +62,6 @@ class CreateModels:
         return mistral_model
 
     def create_llama(self):
-        # Initialize the Together AI LLM with Llama 3
         llama_model = Together(
             model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
             together_api_key=self.together_key,

@@ -9,7 +9,7 @@ class DataIngestion:
         pass
 
     def load_data(self):
-        pdf_folder = "D:\BroCamp\Projects\Chatbot-ai\Data"
+        pdf_folder = "D:/BroCamp/Projects/Chatbot-ai/Data"
         try:
             pdf_loader = PyPDFDirectoryLoader(pdf_folder)
             pdf_documents = pdf_loader.load()
