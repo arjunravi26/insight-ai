@@ -6,6 +6,5 @@ class DataIngestionPipeline:
 
     def start_ingestion(self):
         data_ingestion = DataIngestion()
-        book = data_ingestion.load_book_pdf()
-        arvix = data_ingestion.load_arvix_data()
-        return book, arvix
+        data = data_ingestion.load_data()
+        return data

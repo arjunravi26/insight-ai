@@ -16,4 +16,3 @@ class CreateVectorDBPipeline:
         vector_db = VectorDB(self.embedding_model, batch_size=self.batch_size)
         vector_db.create_vectordb()
         vector_db.insert_book(self.book)
-        vector_db.insert_arvix(self.arvix)
