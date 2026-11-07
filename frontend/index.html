@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>INSIGHT-AI</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="sidebar-header">
+                <h2>🧠 INSIGHT-AI</h2>
+                <p>AI Knowledge Assistant</p>
+            </div>
+
+            <div class="sidebar-content">
+
+                <!-- Document Upload -->
+                <section class="sidebar-section">
+
+                    <label class="section-label" for="pdf-input">
+                        Your Documents
+                    </label>
+
+                    <input
+                        type="file"
+                        id="pdf-input"
+                        accept=".pdf,application/pdf"
+                        hidden
+                    >
+
+                    <button
+                        type="button"
+                        id="upload-button"
+                        class="upload-button"
+                    >
+                        <span>＋</span>
+                        Upload PDF
+                    </button>
+
+                    <label for="document-select" class="field-label">
+                        Select a document
+                    </label>
+
+                    <select id="document-select" disabled>
+                        <option value="">No documents uploaded</option>
+                    </select>
+
+                    <p
+                        id="upload-status"
+                        class="upload-status"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        Upload a PDF to start.
+                    </p>
+
+                </section>
+
+
+                <!-- Model Selection -->
+                <section class="sidebar-section">
+
+                    <label for="model-select" class="field-label">
+                        Generation Model
+                    </label>
+
+                    <select id="model-select">
+                        <option value="Gemini">Gemini</option>
+                        <option value="Mistral">Mistral</option>
+                        <option value="Groq">Groq</option>
+                    </select>
+
+                </section>
+
+
+                <!-- Chat Actions -->
+                <section class="sidebar-section">
+
+                    <button
+                        type="button"
+                        id="clear-chat"
+                        class="clear-button"
+                    >
+                        Clear Chat
+                    </button>
+
+                </section>
+
+            </div>
+
+            <div class="sidebar-footer">
+                <span>Insight-AI v1.0</span>
+            </div>
+
+        </aside>
+
+
+        <!-- Main Chat Area -->
+        <main class="main-content">
+
+            <header class="header">
+                <h1>INSIGHT-AI</h1>
+                <p>Your intelligent document knowledge assistant</p>
+
+                <div class="active-document">
+                    <span class="document-indicator"></span>
+                    <span id="active-document-name">
+                        No document selected
+                    </span>
+                </div>
+            </header>
+
+
+            <!-- Chat Messages -->
+            <section id="chat-container" class="chat-container">
+
+                <div id="welcome-screen" class="welcome-screen">
+
+                    <h2>What would you like to learn?</h2>
+
+                    <p>
+                        Upload a PDF, select it and ask questions
+                        about its contents.
+                    </p>
+
+                    <div class="suggestion-grid">
+
+                        <button
+                            type="button"
+                            class="suggestion-button"
+                        >
+                            Summarize this document.
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggestion-button"
+                        >
+                            What are the key concepts?
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggestion-button"
+                        >
+                            Explain the most important ideas.
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div id="messages"></div>
+
+            </section>
+
+
+            <!-- Follow-up Questions -->
+            <section
+                id="followup-container"
+                class="followup-container hidden"
+            >
+
+                <h3>Follow-up Questions</h3>
+
+                <div id="followup-buttons"></div>
+
+            </section>
+
+
+            <!-- Input Area -->
+            <footer class="input-area">
+
+                <form id="chat-form">
+
+                    <input
+                        type="text"
+                        id="user-input"
+                        placeholder="Upload and select a PDF first..."
+                        autocomplete="off"
+                        maxlength="10000"
+                        required
+                        disabled
+                    >
+
+                    <button
+                        type="submit"
+                        id="send-button"
+                        disabled
+                    >
+                        Send
+                    </button>
+
+                </form>
+
+                <p class="input-note">
+                    Questions are answered using the selected document.
+                    AI-generated responses may contain inaccuracies.
+                </p>
+
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <script src="/static/app.js"></script>
+
+</body>
+
+</html>

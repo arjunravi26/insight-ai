@@ -1,0 +1,11 @@
+embedding_model: sentence-transformers/all-mpnet-base-v2
+embedding_model_limit: 384
+chunking_size: 300
+overlap_size: 84
+ingest_batch_size: 32
+index_name: "insight-ai"
+namespace: "documents"
+dimension:  768
+create_if_missing: False
+cloud: "aws"
+region: "us-east-1"
