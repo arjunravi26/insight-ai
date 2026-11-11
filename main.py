@@ -9,22 +9,30 @@ from services.ingestion_service import IngestionService
 from services.generation_service import GenerationService
 from src.embedding.embedding import EmbeddingModel
 from core.read_yaml import read_yaml
+from database.database import Base, engine
+from api.auth import router as auth_router
+from services.maintaince_service import maintance_service
+import asyncio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = Path("frontend")
+UPLOAD_DIR = ""
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
     logger.info("Initializing Insight-AI...")
+    cleanup_task = asyncio.create_task(maintance_service, UPLOAD_DIR)
 
     try:
 
         embedding_model = EmbeddingModel()
         config = read_yaml()
+
         app.state.ingestion_service = IngestionService(
             config=config,
             embedding_model=embedding_model
@@ -39,6 +47,11 @@ async def lifespan(app: FastAPI):
         raise
 
     finally:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            pass
         logger.info("Shutting down Insight-AI.")
 
 
@@ -48,12 +61,15 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
-
+Base.metadata.create_all(bind=engine)
+app.include_router(auth_router)
 app.include_router(router)
+
+BASE_DIR = Path(__file__).resolve().parents[1]
 
 app.mount(
     "/static",
-    StaticFiles(directory=str(FRONTEND_DIR)),
+    StaticFiles(directory=str(FRONTEND_DIR / "static")),
     name="static"
 )
 

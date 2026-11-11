@@ -1,0 +1,11 @@
+# Generate migration from model changes
+alembic revision --autogenerate -m "create jobs table"
+
+# Apply migrations
+alembic upgrade head
+
+# See current database revision
+alembic current
+
+# See migration history
+alembic history

@@ -93,6 +93,7 @@ class PineconeVectorStore:
         self,
         chunks,
         document_id: str,
+        user_id: int,
         filename: str,
         batch_size: int = 50,
     ):
@@ -155,6 +156,7 @@ class PineconeVectorStore:
                 "document_id": document_id,
                 "filename": filename,
                 "chunk_index": i,
+                "user_id": user_id,
             }
 
             page = metadata.get("page")
@@ -179,6 +181,7 @@ class PineconeVectorStore:
 
         return {
             "document_id": document_id,
+            "user_id": user_id,
             "filename": filename,
             "chunks_created": len(records),
             "chunks_upserted": total_upserted,

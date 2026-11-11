@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
 from typing import Literal
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class ChatRequest(BaseModel):
@@ -19,3 +19,28 @@ class DocumentUploadResponse(BaseModel):
     filename: str
     status: str
     result: dict
+
+
+class RegisterRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+
+class RegisterRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

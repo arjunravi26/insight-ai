@@ -49,7 +49,9 @@ class Retriever:
         query: str,
         top_k: int = 5,
         document_id: Optional[str] = None,
+        user_id: Optional[int] = None,
         filter: Optional[dict] = None,
+
     ):
         """
         Search Pinecone for relevant document chunks.
@@ -93,9 +95,15 @@ class Retriever:
                 "filename",
                 "page_number",
                 "document_id",
+                "user_id",
                 "chunk_index",
             ],
-            filter=filter,
+            filter={
+                "$and": [
+                    {"user_id": {"$eq": user_id}},
+                    {"document_id": {"$eq": document_id}}
+                ]
+            },
         )
 
         retrieved_chunks = []
