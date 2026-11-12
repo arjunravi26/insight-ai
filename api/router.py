@@ -13,11 +13,12 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile, Depends
 from starlette.concurrency import run_in_threadpool
 from core.security import get_current_user
 from database.database import get_db
-from database.models import User
+from database.models import User, Document, Job
 from repository.document_repository import DocumentRepository
 import aiofiles
 import asyncio
 import os
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ router = APIRouter(
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 UPLOAD_DIR = BASE_DIR / "data" / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
 
@@ -45,7 +47,7 @@ async def remove_files(path: Path | None):
 
     await asyncio.to_thread(
         path.unlink,
-        message_ok=True
+        missing_ok=True
 
     )
 
@@ -55,6 +57,23 @@ async def remove_files(path: Path | None):
     response_model=DocumentUploadResponse,
     status_code=201
 )
+async def save_document(file: UploadFile, file_path: str, temp_path):
+
+    chunk_len = 0
+
+    async with aiofiles.open(temp_path, "wb") as desitination:
+        while chunk := await file.read(1024 * 1024):
+            chunk_len += len(chunk)
+            if chunk_len > MAX_FILE_SIZE:
+                raise HTTPException(
+                    status_code=413, detail="PDF exceeds the 20 MB limit.")
+            await desitination.write(chunk)
+
+    async with aiofiles.open(file_path, "rb") as pdf:
+        if await pdf.read(5) != b"%PDF-":
+            raise HTTPException(status_code=400, detail="Invalid PDF file")
+
+
 async def upload_document(
     request: Request,
     file: UploadFile = File(...),
@@ -73,93 +92,94 @@ async def upload_document(
         document_record_created = False
 
         document_id = str(uuid.uuid4())
+        job_id = str(uuid.uuid4())
         filename = Path(file.filename.replace("\\", "/")).name
-        document_repository = DocumentRepository(db=db)
-
-        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
         temp_path = UPLOAD_DIR / F"{document_id}.temp"
         file_path = UPLOAD_DIR / f"{document_id}.pdf"
 
-        total_size = 0
+        document_repository = DocumentRepository(db=db)
 
-        async with aiofiles.open(temp_path, "wb") as destination:
-
-            while chunk := await file.read(1024 * 1024):
-
-                total_size += len(chunk)
-
-                if total_size > MAX_FILE_SIZE:
-                    raise HTTPException(
-                        status_code=413,
-                        detail="PDF exceeds the 20 MB limit."
-                    )
-
-                await destination.write(chunk)
-
-        async with aiofiles.open(temp_path, "rb") as pdf:
-
-            if await pdf.read(5) != b"%PDF-":
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid PDF file."
-                )
+        await save_document(file=file, file_path=file_path, temp_path=temp_path)
 
         await asyncio.to_thread(
-            os.rename,
+            os.replace,
             temp_path,
             file_path
         )
         temp_path = None
 
-        ingestion_service: IngestionService = request.app.state.ingestion_service
-
         try:
-            document_repository.upload_document(
-                document_id=document_id, filename=filename,
-                user_id=current_user.id, status="PROCESSSING"
-            )
+            document = Document(
+                document_id=document_id, user_id=current_user.id, filename=filename, file_path=file_path, status="PROCESSING")
+            db.add(document)
+            db.flush()
+            job = Job(job_id=job_id, user_id=current_user.id,
+                      document_record_id=document_id, job_type="INGESTION", status="PENDING")
+            db.add(job)
+            db.commit()
             document_record_created = True
         except IntegrityError:
+            db.rollback()
             raise HTTPException(
                 status_code=409,
                 detail="Unable to create document record"
             )
 
-        try:
-
-            result = await run_in_threadpool(
-                ingestion_service.ingest_pdf,
-                str(file_path),
-                document_id=document_id,
-                filename=filename
-            )
-        except Exception as e:
-            logger.exception(f"Failed to run ingestion worker. {e}")
-            document_repository.update(
-                user_id=current_user.id, document_id=document_id, status="FAILED")
-            raise HTTPException(
-                status_code=500,
-                detail="Document Ingestion failed."
-            )
-
-        document_repository.update(
-            user_id=current_user.id, document_id=document_id, status="READY")
-
         return DocumentUploadResponse(
             document_id=document_id,
+            job_id=job_id,
             filename=filename,
-            status="completed",
-            result=result
+            document_status="PROCESSING",
+            job_status="PENDING",
+            message="Document uploaded. Ingestion has been queued.",
+            created_at=datetime.now(timezone.utc)
         )
+
+    except HTTPException:
+        db.rollback()
+        await remove_files(path=temp_path)
+
+        if not document_record_created:
+            await remove_files(path=file_path)
+        raise
+
+    except IntegrityError:
+        db.rollback()
+        await remove_files(path=temp_path)
+
+        if not document_record_created:
+            await remove_files(path=file_path)
+        logger.exception(
+            f"Database document record creation failed %s.", document_id)
+
+        try:
+            document_repository.update_status(
+                user_id=current_user.id, document_id=document_id, status="FAILED")
+            db.commit()
+        except Exception:
+            db.rollback()
+            logger.exception(
+                f"Could not update document status %s.", document_id)
+        raise HTTPException(status_code=409, detail="Unable to save document.")
 
     except Exception:
         await remove_files(temp_path)
 
-        if not document_record_created:
-            await remove_files(file_path)
+        if document_record_created:
 
-        logger.exception("Document ingestion failed")
+            logger.exception("Document ingestion failed")
+
+            try:
+                document_repository.update_status(
+                    user_id=current_user.id, document_id=document_id, status="FAILED")
+                db.commit()
+            except Exception:
+                db.rollback()
+                logger.exception(
+                    f"Could not update document status %s.", document_id)
+        else:
+            await remove_files(file_path)
 
         raise HTTPException(
             status_code=500,

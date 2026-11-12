@@ -14,6 +14,7 @@ from sqlalchemy import (
 )
 import uuid
 
+
 def utc_now():
     return datetime.now(timezone.utc)
 
@@ -68,14 +69,15 @@ class Document(Base):
     )
 
     filename = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)
 
     status = Column(
         String(30),
         nullable=False,
         default="QUEUED"
     )
-    created_at = Column(DateTime(timezone=True),default=utc_now,nullable=False)
-
+    created_at = Column(DateTime(timezone=True),
+                        default=utc_now, nullable=False)
 
 
 class Job(Base):
@@ -110,7 +112,7 @@ class Job(Base):
     status = Column(
         String(30),
         nullable=False,
-        default="QUEUED"
+        default="PENDING"
     )
 
     attempts = Column(Integer, nullable=False, default=0)

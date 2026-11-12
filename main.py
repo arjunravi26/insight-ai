@@ -61,7 +61,6 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
-Base.metadata.create_all(bind=engine)
 app.include_router(auth_router)
 app.include_router(router)
 

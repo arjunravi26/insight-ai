@@ -17,7 +17,7 @@ def file_cleanup(upload_dir: Path, max_hr_limit: int = 24):
 
         for path in upload_dir.glob(".*.pdf"):
             if path.stat().st_mtime < cut_off_hr:
-                path.unlink()
+                path.unlink(missing_ok=True)
                 no_of_deleted_files += 1
 
         logger.exception(f"No of files deleted is: {no_of_deleted_files}")

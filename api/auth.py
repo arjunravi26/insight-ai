@@ -52,8 +52,14 @@ def register_user(
         )
 
     try:
-        user = user_repository.add_user(username=username, email=email, hashed_password=hash_password(payload.password))
+
+        user = User(username=username, email=email,
+                    p=hash_password(payload.password))
+        db.add(user)
+        db.commit(user)
+        db.refresh(user)
     except IntegrityError:
+        db.rollback()
         raise HTTPException(
             status_code=409,
             detail="Username or email already registered."

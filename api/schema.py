@@ -1,6 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
+from datetime import datetime
 
 class ChatRequest(BaseModel):
     document_id: str = Field(min_length=1, max_length=100)
@@ -16,9 +16,12 @@ class ChatResponse(BaseModel):
 
 class DocumentUploadResponse(BaseModel):
     document_id: str
+    job_id: str
     filename: str
-    status: str
-    result: dict
+    document_status: str
+    job_status: str
+    message: str
+    created_at: datetime
 
 
 class RegisterRequest(BaseModel):
@@ -31,7 +34,7 @@ class RegisterRequest(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
-    
+
 class UserResponse(BaseModel):
     id: int
     username: str
