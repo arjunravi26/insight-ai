@@ -1,6 +1,7 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from datetime import datetime
+from dataclasses import dataclass
 
 class ChatRequest(BaseModel):
     document_id: str = Field(min_length=1, max_length=100)
@@ -47,3 +48,18 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+
+@dataclass(frozen=True, slots=True)
+class IngestionJobPayload:
+
+    job_id: str
+    document_id: str
+    file_path: str
+    filename: str
+
+    attempts: int
+    max_attempts: int
+
+    lock_token: str

@@ -18,6 +18,7 @@ class JobRepository:
             )
             .order_by(Job.created_at.asc())
             .limit(1)
+
         )
 
     def get_job_by_id(self, job_id):

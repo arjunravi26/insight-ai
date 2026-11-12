@@ -69,7 +69,7 @@ class Document(Base):
     )
 
     filename = Column(String, nullable=False)
-    file_path = Column(String, nullable=False)
+    file_path = Column(String, nullable=True)
 
     status = Column(
         String(30),
@@ -147,10 +147,15 @@ class Job(Base):
     )
 
     locked_until = Column(DateTime(timezone=True), nullable=True)
+    lock_token = Column(
+        String(36),
+        nullable=True
+    )
 
     __table_args__ = (
         Index("ix_jobs_status_available", "status", "available_at"),
         Index("ix_jobs_user_created", "user_id", "created_at"),
+        Index("ix_jobs_status_locked_until", "status", "locked_until")
     )
 
 
