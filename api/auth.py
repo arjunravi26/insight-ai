@@ -33,7 +33,7 @@ def register_user(
     payload: RegisterRequest,
     db: Session = Depends(get_db)
 ):
-    user_repository = UserRepository()
+    user_repository = UserRepository(db=db)
     username = payload.username.strip().lower()
     email = str(payload.email).strip().lower()
 
@@ -54,9 +54,9 @@ def register_user(
     try:
 
         user = User(username=username, email=email,
-                    p=hash_password(payload.password))
+                    hashed_password=hash_password(payload.password))
         db.add(user)
-        db.commit(user)
+        db.commit()
         db.refresh(user)
     except IntegrityError:
         db.rollback()

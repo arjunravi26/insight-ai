@@ -2,7 +2,13 @@
 __pycache__/
 *.py[cod]
 *$py.class
+# SQLite database
+*.db
+*.db-shm
+*.db-wal
 
+
+# Keep Alembic migrations tracked!
 # C extensions
 *.so
 

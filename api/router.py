@@ -2,7 +2,7 @@ from api.schema import (
     ChatRequest,
     ChatResponse,
     DocumentUploadResponse)
-from services.ingestion_service import IngestionService
+from fastapi import status
 from services.generation_service import GenerationService
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -51,12 +51,6 @@ async def remove_files(path: Path | None):
 
     )
 
-
-@router.post(
-    "/documents",
-    response_model=DocumentUploadResponse,
-    status_code=201
-)
 async def save_document(file: UploadFile, file_path: str, temp_path):
 
     chunk_len = 0
@@ -69,11 +63,15 @@ async def save_document(file: UploadFile, file_path: str, temp_path):
                     status_code=413, detail="PDF exceeds the 20 MB limit.")
             await desitination.write(chunk)
 
-    async with aiofiles.open(file_path, "rb") as pdf:
+    async with aiofiles.open(temp_path, "rb") as pdf:
         if await pdf.read(5) != b"%PDF-":
             raise HTTPException(status_code=400, detail="Invalid PDF file")
 
-
+@router.post(
+    "/documents",
+    response_model=DocumentUploadResponse,
+    status_code=status.HTTP_202_ACCEPTED
+)
 async def upload_document(
     request: Request,
     file: UploadFile = File(...),
@@ -111,11 +109,11 @@ async def upload_document(
 
         try:
             document = Document(
-                document_id=document_id, user_id=current_user.id, filename=filename, file_path=file_path, status="PROCESSING")
+                document_id=document_id, user_id=current_user.id, filename=filename, file_path=str(file_path), status="PROCESSING")
             db.add(document)
             db.flush()
             job = Job(job_id=job_id, user_id=current_user.id,
-                      document_record_id=document_id, job_type="INGESTION", status="PENDING")
+                      document_record_id=document.id, job_type="INGESTION", status="PENDING")
             db.add(job)
             db.commit()
             document_record_created = True
@@ -232,7 +230,7 @@ async def chat(
         provider = MODEL_MAPPING[payload.model]
         follow_ups = []
 
-        answer = await run_in_threadpool(
+        answer, follow_ups = await run_in_threadpool(
             generation_service.generate_response,
             provider=provider,
             query=query,
@@ -241,7 +239,7 @@ async def chat(
         )
 
         return ChatResponse(
-            answer=str(answer),
+            answer=answer,
             follow_ups=follow_ups[:3] if follow_ups else []
         )
 

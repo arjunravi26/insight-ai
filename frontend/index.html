@@ -1,468 +1,142 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>INSIGHT-AI</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="Insight-AI: ask questions about your documents.">
+  <title>Insight-AI — Document Assistant</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/auth.js" defer></script>
+  <script src="/static/app.js" defer></script>
 </head>
-
 <body>
+  <main id="authScreen" class="auth-screen">
+    <section class="auth-panel" aria-labelledby="brand-title">
+      <div class="brand-mark" aria-hidden="true">IA</div>
+      <p class="eyebrow">YOUR PRIVATE KNOWLEDGE SPACE</p>
+      <h1 id="brand-title">Insight-AI</h1>
+      <p class="auth-intro">Bring your documents. Ask better questions. Find the information that matters.</p>
 
-    <!-- ==========================================
-         AUTHENTICATION SCREEN
-         Visible when user is not authenticated
-    =========================================== -->
+      <form id="loginForm" class="auth-form">
+        <h2>Welcome back</h2>
+        <label for="loginUsername">Username or email</label>
+        <input id="loginUsername" name="username" type="text" autocomplete="username" required maxlength="255" placeholder="you@example.com">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+        <button id="loginButton" class="button button-primary" type="submit">Sign in</button>
+        <p class="auth-switch">New to Insight-AI? <button id="showRegister" class="text-button" type="button">Create an account</button></p>
+      </form>
 
-    <section id="authScreen" class="auth-screen">
+      <form id="registerForm" class="auth-form" hidden>
+        <h2>Create your account</h2>
+        <label for="registerUsername">Username</label>
+        <input id="registerUsername" name="username" type="text" minlength="3" maxlength="50" autocomplete="username" required>
+        <label for="registerEmail">Email</label>
+        <input id="registerEmail" name="email" type="email" maxlength="255" autocomplete="email" required>
+        <label for="registerPassword">Password</label>
+        <input id="registerPassword" name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+        <button id="registerButton" class="button button-primary" type="submit">Create account</button>
+        <p class="auth-switch">Already registered? <button id="showLogin" class="text-button" type="button">Sign in</button></p>
+      </form>
 
-        <div class="auth-card">
-
-            <h1>🧠 INSIGHT-AI</h1>
-
-            <p class="auth-subtitle">
-                Your AI Knowledge Assistant
-            </p>
-
-
-            <!-- LOGIN FORM -->
-
-            <form id="loginForm">
-
-                <h2>Welcome Back</h2>
-
-                <label for="loginUsername">
-                    Username or Email
-                </label>
-
-                <input
-                    type="text"
-                    id="loginUsername"
-                    name="username"
-                    placeholder="Enter username or email"
-                    autocomplete="username"
-                    required
-                >
-
-                <label for="loginPassword">
-                    Password
-                </label>
-
-                <input
-                    type="password"
-                    id="loginPassword"
-                    name="password"
-                    placeholder="Enter password"
-                    autocomplete="current-password"
-                    required
-                >
-
-                <button
-                    type="submit"
-                    id="loginButton"
-                >
-                    Login
-                </button>
-
-                <p class="auth-switch">
-                    Don't have an account?
-
-                    <button
-                        type="button"
-                        id="showRegister"
-                    >
-                        Register
-                    </button>
-                </p>
-
-            </form>
-
-
-            <!-- REGISTRATION FORM -->
-
-            <form id="registerForm" hidden>
-
-                <h2>Create Account</h2>
-
-                <label for="registerUsername">
-                    Username
-                </label>
-
-                <input
-                    type="text"
-                    id="registerUsername"
-                    name="username"
-                    minlength="3"
-                    maxlength="50"
-                    placeholder="Choose username"
-                    autocomplete="username"
-                    required
-                >
-
-                <label for="registerEmail">
-                    Email
-                </label>
-
-                <input
-                    type="email"
-                    id="registerEmail"
-                    name="email"
-                    placeholder="Enter email"
-                    autocomplete="email"
-                    required
-                >
-
-                <label for="registerPassword">
-                    Password
-                </label>
-
-                <input
-                    type="password"
-                    id="registerPassword"
-                    name="password"
-                    minlength="8"
-                    maxlength="128"
-                    placeholder="Create password"
-                    autocomplete="new-password"
-                    required
-                >
-
-                <button
-                    type="submit"
-                    id="registerButton"
-                >
-                    Create Account
-                </button>
-
-                <p class="auth-switch">
-                    Already have an account?
-
-                    <button
-                        type="button"
-                        id="showLogin"
-                    >
-                        Login
-                    </button>
-                </p>
-
-            </form>
-
-
-            <!-- AUTHENTICATION MESSAGE -->
-
-            <p id="authMessage" role="alert" aria-live="polite"></p>
-
-        </div>
-
+      <p id="authMessage" class="notice" role="status" aria-live="polite"></p>
     </section>
-
-
-    <!-- ==========================================
-         MAIN APPLICATION
-         Hidden until login succeeds
-    =========================================== -->
-
-    <div id="appShell" hidden>
-
-        <div class="app-container">
-
-
-            <!-- SIDEBAR -->
-
-            <aside class="sidebar">
-
-
-                <!-- USER SESSION -->
-
-                <div class="user-session">
-
-                    <span id="currentUserLabel"></span>
-
-                    <button
-                        type="button"
-                        id="logoutButton"
-                    >
-                        Logout
-                    </button>
-
-                </div>
-
-
-                <div class="sidebar-header">
-
-                    <h2>🧠 INSIGHT-AI</h2>
-
-                    <p>AI Knowledge Assistant</p>
-
-                </div>
-
-
-                <div class="sidebar-content">
-
-
-                    <!-- DOCUMENT UPLOAD -->
-
-                    <section class="sidebar-section">
-
-                        <label
-                            class="section-label"
-                            for="pdf-input"
-                        >
-                            Your Documents
-                        </label>
-
-                        <input
-                            type="file"
-                            id="pdf-input"
-                            accept=".pdf,application/pdf"
-                            hidden
-                        >
-
-                        <button
-                            type="button"
-                            id="upload-button"
-                            class="upload-button"
-                        >
-
-                            <span>＋</span>
-
-                            Upload PDF
-
-                        </button>
-
-
-                        <label
-                            for="document-select"
-                            class="field-label"
-                        >
-                            Select a document
-                        </label>
-
-                        <select
-                            id="document-select"
-                            disabled
-                        >
-
-                            <option value="">
-                                No documents uploaded
-                            </option>
-
-                        </select>
-
-
-                        <p
-                            id="upload-status"
-                            class="upload-status"
-                            role="status"
-                            aria-live="polite"
-                        >
-                            Upload a PDF to start.
-                        </p>
-
-                    </section>
-
-
-                    <!-- MODEL SELECTION -->
-
-                    <section class="sidebar-section">
-
-                        <label
-                            for="model-select"
-                            class="field-label"
-                        >
-                            Generation Model
-                        </label>
-
-                        <select id="model-select">
-
-                            <option value="Gemini">Gemini</option>
-
-                            <option value="Mistral">Mistral</option>
-
-                            <option value="Groq">Groq</option>
-
-                        </select>
-
-                    </section>
-
-
-                    <!-- CHAT ACTIONS -->
-
-                    <section class="sidebar-section">
-
-                        <button
-                            type="button"
-                            id="clear-chat"
-                            class="clear-button"
-                        >
-                            Clear Chat
-                        </button>
-
-                    </section>
-
-                </div>
-
-
-                <div class="sidebar-footer">
-
-                    <span>Insight-AI v1.0</span>
-
-                </div>
-
-            </aside>
-
-
-            <!-- MAIN CHAT AREA -->
-
-            <main class="main-content">
-
-
-                <header class="header">
-
-                    <h1>INSIGHT-AI</h1>
-
-                    <p>
-                        Your intelligent document knowledge assistant
-                    </p>
-
-
-                    <div class="active-document">
-
-                        <span class="document-indicator"></span>
-
-                        <span id="active-document-name">
-                            No document selected
-                        </span>
-
-                    </div>
-
-                </header>
-
-
-                <!-- CHAT MESSAGES -->
-
-                <section
-                    id="chat-container"
-                    class="chat-container"
-                >
-
-                    <div
-                        id="welcome-screen"
-                        class="welcome-screen"
-                    >
-
-                        <h2>
-                            What would you like to learn?
-                        </h2>
-
-                        <p>
-                            Upload a PDF, select it and ask questions
-                            about its contents.
-                        </p>
-
-
-                        <div class="suggestion-grid">
-
-                            <button
-                                type="button"
-                                class="suggestion-button"
-                            >
-                                Summarize this document.
-                            </button>
-
-                            <button
-                                type="button"
-                                class="suggestion-button"
-                            >
-                                What are the key concepts?
-                            </button>
-
-                            <button
-                                type="button"
-                                class="suggestion-button"
-                            >
-                                Explain the most important ideas.
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    <div id="messages"></div>
-
-                </section>
-
-
-                <!-- FOLLOW-UP QUESTIONS -->
-
-                <section
-                    id="followup-container"
-                    class="followup-container hidden"
-                >
-
-                    <h3>Follow-up Questions</h3>
-
-                    <div id="followup-buttons"></div>
-
-                </section>
-
-
-                <!-- CHAT INPUT -->
-
-                <footer class="input-area">
-
-                    <form id="chat-form">
-
-                        <input
-                            type="text"
-                            id="user-input"
-                            placeholder="Upload and select a PDF first..."
-                            autocomplete="off"
-                            maxlength="10000"
-                            required
-                            disabled
-                        >
-
-                        <button
-                            type="submit"
-                            id="send-button"
-                            disabled
-                        >
-                            Send
-                        </button>
-
-                    </form>
-
-
-                    <p class="input-note">
-
-                        Questions are answered using the selected document.
-
-                        AI-generated responses may contain inaccuracies.
-
-                    </p>
-
-                </footer>
-
-            </main>
-
+  </main>
+
+  <div id="appShell" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark brand-mark-small" aria-hidden="true">IA</div>
+        <div>
+          <div class="brand-name">Insight-AI</div>
+          <div class="brand-caption">Document assistant</div>
         </div>
+      </div>
 
-    </div>
+      <section class="sidebar-section account-section">
+        <div class="account-copy">
+          <span class="eyebrow">SIGNED IN</span>
+          <strong id="currentUserLabel">Account</strong>
+        </div>
+        <button id="logoutButton" class="button button-quiet button-small" type="button">Sign out</button>
+      </section>
 
+      <section class="sidebar-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">YOUR LIBRARY</p>
+            <h2>Documents</h2>
+          </div>
+          <span id="documentCount" class="count-pill">0</span>
+        </div>
+        <input id="pdf-input" type="file" accept=".pdf,application/pdf" hidden>
+        <button id="upload-button" class="button button-primary upload-button" type="button">
+          <span aria-hidden="true">＋</span> Upload PDF
+        </button>
+        <label class="field-label" for="document-select">Select a document</label>
+        <select id="document-select" class="field-control" disabled>
+          <option value="">No documents yet</option>
+        </select>
+        <p id="upload-status" class="notice" role="status" aria-live="polite">Upload a PDF to begin.</p>
+        <p class="helper-text">PDF files up to 20 MB. Documents become available after ingestion finishes.</p>
+      </section>
 
-    <!-- AUTHENTICATION JS FIRST -->
+      <section class="sidebar-section model-section">
+        <label class="field-label" for="model-select">Answer model</label>
+        <select id="model-select" class="field-control">
+          <option value="Groq">Groq</option>
+          <option value="Gemini">Gemini</option>
+          <option value="Mistral">Mistral</option>
+        </select>
+        <button id="clear-chat" class="button button-secondary clear-button" type="button">Clear conversation</button>
+      </section>
 
-    <script src="/static/auth.js" defer></script>
+      <div class="sidebar-footer">Insight-AI · Private document Q&amp;A</div>
+    </aside>
 
-    <!-- MAIN APPLICATION JS SECOND -->
+    <main class="workspace">
+      <header class="workspace-header">
+        <div>
+          <p class="eyebrow">DOCUMENT INTELLIGENCE</p>
+          <h1>Ask your knowledge base</h1>
+          <p class="header-subtitle">Answers are generated from the selected document's retrieved content.</p>
+        </div>
+        <div class="active-document-chip" title="Selected document">
+          <span class="status-dot" id="activeDocumentDot"></span>
+          <span id="active-document-name">No document selected</span>
+        </div>
+      </header>
 
-    <script src="/static/app.js" defer></script>
+      <section id="chat-container" class="chat-area" aria-live="polite">
+        <div id="welcome-screen" class="welcome-screen">
+          <div class="welcome-icon" aria-hidden="true">✳</div>
+          <p class="eyebrow">START WITH A DOCUMENT</p>
+          <h2>What would you like to understand?</h2>
+          <p>Select a document that is ready, then ask a question about its contents.</p>
+          <div class="suggestion-grid">
+            <button class="suggestion-button" type="button">Summarize this document.</button>
+            <button class="suggestion-button" type="button">What are its key concepts?</button>
+            <button class="suggestion-button" type="button">What are the most important findings?</button>
+          </div>
+        </div>
+        <div id="messages" class="messages"></div>
+      </section>
 
+      <section id="followup-container" class="followup-panel" hidden>
+        <div class="followup-heading">Continue exploring</div>
+        <div id="followup-buttons" class="followup-buttons"></div>
+      </section>
+
+      <footer class="composer-area">
+        <form id="chat-form" class="composer">
+          <label class="visually-hidden" for="user-input">Your question</label>
+          <textarea id="user-input" rows="1" maxlength="10000" placeholder="Select a ready document to ask a question…" disabled required></textarea>
+          <button id="send-button" class="button button-primary send-button" type="submit" disabled>Send <span aria-hidden="true">↗</span></button>
+        </form>
+        <p class="input-note">AI-generated answers may be inaccurate. Verify important information against the original document.</p>
+      </footer>
+    </main>
+  </div>
 </body>
-
 </html>

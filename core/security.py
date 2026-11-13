@@ -105,7 +105,6 @@ def get_current_user(
         )
 
         user_id = int(payload.get("sub"))
-        print(f"Decoded user_id from token: {user_id}")
 
     except (InvalidTokenError, TypeError, ValueError):
         raise credentials_exception

@@ -56,6 +56,7 @@ class IngestionJobPayload:
 
     job_id: str
     document_id: str
+    user_id: int
     file_path: str
     filename: str
 

@@ -2,6 +2,9 @@ import re
 from pathlib import Path
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ExtractData:
@@ -13,54 +16,58 @@ class ExtractData:
         filename: str | None = None
     ) -> list[Document]:
 
-        loader = PyPDFLoader(pdf_path)
-        pdf_documents = loader.load()
+        try:
 
-        extracted_documents = []
+            loader = PyPDFLoader(pdf_path)
+            pdf_documents = loader.load()
 
-        for page_index, doc in enumerate(pdf_documents):
+            extracted_documents = []
 
-            # Extract page text
-            text = self._clean_text(doc.page_content)
+            for page_index, doc in enumerate(pdf_documents):
 
-            # Skip empty pages
-            if not text:
-                continue
+                # Extract page text
+                text = self._clean_text(doc.page_content)
 
-            # Preserve existing PDF metadata
-            metadata = dict(doc.metadata or {})
+                # Skip empty pages
+                if not text:
+                    continue
 
-            # Determine page number.
-            # PyPDFLoader commonly provides a zero-based `page` value.
-            original_page = metadata.get("page")
+                # Preserve existing PDF metadata
+                metadata = dict(doc.metadata or {})
 
-            if isinstance(original_page, int):
-                page_number = original_page + 1
-            else:
-                page_number = page_index + 1
+                # Determine page number.
+                # PyPDFLoader commonly provides a zero-based `page` value.
+                original_page = metadata.get("page")
 
-            # Determine filename
-            source = metadata.get("source", "")
+                if isinstance(original_page, int):
+                    page_number = original_page + 1
+                else:
+                    page_number = page_index + 1
 
-            if not filename and source:
-                filename = Path(str(source)).name
+                # Determine filename
+                source = metadata.get("source", "")
 
-            # Attach consistent metadata
-            metadata.update({
-                "document_id": document_id,
-                "filename": filename or "uploaded.pdf",
-                "page_number": page_number
-            })
+                if not filename and source:
+                    filename = Path(str(source)).name
 
-            # Create a clean LangChain Document
-            extracted_documents.append(
-                Document(
-                    page_content=text,
-                    metadata=metadata
+                # Attach consistent metadata
+                metadata.update({
+                    "document_id": document_id,
+                    "filename": filename or "uploaded.pdf",
+                    "page_number": page_number
+                })
+
+                # Create a clean LangChain Document
+                extracted_documents.append(
+                    Document(
+                        page_content=text,
+                        metadata=metadata
+                    )
                 )
-            )
 
-        return extracted_documents
+            return extracted_documents
+        except Exception as e:
+            logger.exception(f"Exception at extract data. {e}")
 
     @staticmethod
     def _clean_text(text: str) -> str:

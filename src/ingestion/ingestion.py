@@ -2,7 +2,9 @@ import os
 from src.embedding.embedding import EmbeddingModel
 from pinecone import Pinecone
 from dotenv import load_dotenv
+import logging
 
+logger = logging.getLogger(__name__)
 load_dotenv()
 
 class PineconeVectorStore:
@@ -62,7 +64,7 @@ class PineconeVectorStore:
             },
         )
 
-        print(f"Pinecone index '{self.index_name}' created.")
+        logger.info(f"Pinecone index '{self.index_name}' created.")
 
     def _embed_documents(self, texts):
         """Generate embeddings for multiple document chunks."""

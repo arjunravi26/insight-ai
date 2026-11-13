@@ -1,25 +1,17 @@
-import json
-import re
 import logging
 
-from typing import Sequence
+from typing import Sequence, Any
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-
-from src.generation.models import CreateModels, Provider
-
 
 logger = logging.getLogger(__name__)
 
 
-class RAGGenerator:
+class Prompt:
 
-    def __init__(self, model_factory: CreateModels):
+    def __init__(self):
 
-        self.model_factory = model_factory
-
-        self.prompt = ChatPromptTemplate.from_messages([
+        self.template = ChatPromptTemplate.from_messages([
             (
                 "system",
                 """
@@ -62,7 +54,9 @@ Do not include Markdown code fences around the JSON.
                 """
 Retrieved document context:
 
+<retrieved_context>
 {context}
+</retrieved_context>
 
 User question:
 
@@ -73,75 +67,76 @@ Generate your response using the required JSON format.
             )
         ])
 
-    def generate(
+    def generate_prompt(
         self,
         query: str,
-        retrieved_chunks: Sequence,
-        provider: Provider
-    ) -> tuple[str, list[str]]:
+        retrieved_chunks: Sequence[Any],
+    ) -> tuple[dict[str, str], list[dict[str, Any]]]:
 
         if not query or not query.strip():
             raise ValueError("Query cannot be empty.")
 
+        # 1. Build the context string and source metadata.
         context, sources = self._build_context(retrieved_chunks)
 
-        # Avoid calling the LLM when retrieval finds nothing useful.
         if not context:
-            return (
-                "I couldn't find relevant information in the uploaded documents "
-                "to answer your question.",
-                [
-                    "Can you rephrase your question?",
-                    "Would you like to upload another document?"
-                ]
-            )
+            context = "No relevant information was found in the uploaded documents."
 
-        try:
-            llm = self.model_factory.get_model(provider)
-
-            chain = self.prompt | llm | StrOutputParser()
-
-            raw_response = chain.invoke({
-                "context": context,
-                "question": query.strip()
-            })
-
-            answer, follow_ups = self._parse_response(raw_response)
-
-            answer = self._append_sources(answer, sources)
-
-            return answer, follow_ups
-
-        except Exception:
-            logger.exception(
-                "Generation failed using provider %s",
-                provider
-            )
-            raise
+        return context, sources
 
     @staticmethod
-    def _build_context(retrieved_chunks):
+    def _build_context(
+        retrieved_chunks: Sequence[Any],
+        max_context_chars: int = 18000
+    ) -> tuple[str, list[dict[str, Any]]]:
 
         context_parts = []
         sources = []
 
-        max_context_chars = 18000
         used_chars = 0
 
-        for index, chunk in enumerate(retrieved_chunks, start=1):
+        for chunk in retrieved_chunks:
 
+            # Support Pinecone dictionary results.
             if isinstance(chunk, dict):
-                text = chunk.get("text", "")
-                filename = chunk.get("filename", "Unknown document")
-                page_number = chunk.get("page_number")
 
+                metadata = chunk.get("metadata") or {}
+
+                text = chunk.get(
+                    "text",
+                    chunk.get("page_content", "")
+                )
+
+                filename = chunk.get(
+                    "filename",
+                    metadata.get(
+                        "filename",
+                        "Unknown document"
+                    )
+                )
+
+                page_number = chunk.get(
+                    "page_number",
+                    metadata.get("page_number")
+                )
+
+            # Support LangChain Document objects.
             else:
+
                 text = getattr(chunk, "page_content", "")
-                metadata = getattr(chunk, "metadata", {}) or {}
+
+                metadata = getattr(
+                    chunk,
+                    "metadata",
+                    {}
+                ) or {}
 
                 filename = metadata.get(
                     "filename",
-                    metadata.get("source", "Unknown document")
+                    metadata.get(
+                        "source",
+                        "Unknown document"
+                    )
                 )
 
                 page_number = metadata.get("page_number")
@@ -151,105 +146,35 @@ Generate your response using the required JSON format.
             if not text:
                 continue
 
-            remaining = max_context_chars - used_chars
+            source_id = f"S{len(sources) + 1}"
+
+            header = (
+                f"[{source_id}]\n"
+                f"Filename: {filename}\n"
+                f"Page: {page_number if page_number is not None else 'Unknown'}\n"
+                f"Content:\n"
+            )
+
+            # Count headers as part of the context budget.
+            remaining = max_context_chars - used_chars - len(header)
 
             if remaining <= 0:
                 break
 
             text = text[:remaining]
 
-            source_id = f"S{len(sources) + 1}"
+            context_block = header + text
 
-            source_info = {
+            context_parts.append(context_block)
+
+            sources.append({
                 "id": source_id,
                 "filename": filename,
                 "page_number": page_number
-            }
+            })
 
-            context_parts.append(
-                f"""
-[{source_id}]
-Filename: {filename}
-Page: {page_number if page_number is not None else "Unknown"}
+            used_chars += len(context_block) + 2
 
-Content:
-{text}
-"""
-            )
+        context = "\n\n".join(context_parts)
 
-            sources.append(source_info)
-
-            used_chars += len(text)
-
-        return "\n\n".join(context_parts), sources
-
-    @staticmethod
-    def _parse_response(raw_response: str):
-
-        try:
-            cleaned = raw_response.strip()
-
-            # Remove accidental Markdown code fences.
-            cleaned = re.sub(
-                r"^```(?:json)?\s*|\s*```$",
-                "",
-                cleaned,
-                flags=re.IGNORECASE
-            )
-
-            # Extract JSON if the provider adds surrounding text.
-            match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
-
-            if not match:
-                raise ValueError("No JSON object found.")
-
-            data = json.loads(match.group())
-
-            answer = str(data.get("answer", "")).strip()
-
-            follow_ups = data.get("follow_ups", [])
-
-            if not isinstance(follow_ups, list):
-                follow_ups = []
-
-            follow_ups = [
-                str(item).strip()
-                for item in follow_ups
-                if isinstance(item, str) and item.strip()
-            ][:3]
-
-            if not answer:
-                raise ValueError("Generated answer is empty.")
-
-            return answer, follow_ups
-
-        except (ValueError, json.JSONDecodeError, TypeError):
-            logger.warning(
-                "Could not parse structured LLM response. "
-                "Returning raw response."
-            )
-
-            return raw_response.strip(), []
-
-    @staticmethod
-    def _append_sources(answer: str, sources: list[dict]) -> str:
-
-        if not sources:
-            return answer
-
-        source_lines = ["\n\n**Sources:**"]
-
-        for source in sources:
-            filename = source["filename"]
-            page = source["page_number"]
-
-            if page is not None:
-                source_lines.append(
-                    f"- [{source['id']}] {filename}, page {page}"
-                )
-            else:
-                source_lines.append(
-                    f"- [{source['id']}] {filename}"
-                )
-
-        return answer + "\n".join(source_lines)
+        return context, sources

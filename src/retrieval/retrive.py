@@ -47,9 +47,9 @@ class Retriever:
     def search_chunks(
         self,
         query: str,
+        document_id: str,
+        user_id: int,
         top_k: int = 5,
-        document_id: Optional[str] = None,
-        user_id: Optional[int] = None,
         filter: Optional[dict] = None,
 
     ):

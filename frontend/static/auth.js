@@ -1,448 +1,205 @@
+(() => {
+  "use strict";
 
-// ==========================================
-// AUTHENTICATION CONFIGURATION
-// ==========================================
+  const TOKEN_KEY = "insight_ai_access_token";
+  let accessToken = sessionStorage.getItem(TOKEN_KEY);
 
-const AUTH_TOKEN_KEY = "insight_ai_access_token";
+  const $ = (id) => document.getElementById(id);
+  const authScreen = $("authScreen");
+  const appShell = $("appShell");
+  const loginForm = $("loginForm");
+  const registerForm = $("registerForm");
+  const authMessage = $("authMessage");
 
-let accessToken = sessionStorage.getItem(AUTH_TOKEN_KEY);
-
-
-// ==========================================
-// DOM ELEMENTS
-// ==========================================
-
-const authScreen = document.getElementById("authScreen");
-const appShell = document.getElementById("appShell");
-
-const loginForm = document.getElementById("loginForm");
-const registerForm = document.getElementById("registerForm");
-
-const authMessage = document.getElementById("authMessage");
-
-
-// ==========================================
-// UI HELPERS
-// ==========================================
-
-function setAuthMessage(message, type = "info") {
-
-    authMessage.textContent = message;
-    authMessage.dataset.type = type;
-
-}
-
-
-function showLoginForm(message = "", type = "info") {
-
-    loginForm.hidden = false;
-    registerForm.hidden = true;
-
-    setAuthMessage(message, type);
-
-}
-
-
-function showRegisterForm() {
-
-    loginForm.hidden = true;
-    registerForm.hidden = false;
-
-    setAuthMessage("");
-
-}
-
-
-function showAuthScreen(message = "", type = "info") {
-
-    appShell.hidden = true;
-    authScreen.hidden = false;
-
-    showLoginForm(message, type);
-
-}
-
-async function showApplication(user) {
-
-    authScreen.hidden = true;
-    appShell.hidden = false;
-
-    document.getElementById("currentUserLabel").textContent =
-        `Logged in as ${user.username}`;
-
-    if (typeof window.initializeUserDocuments === "function") {
-
-        await window.initializeUserDocuments(user.id);
-
+  class ApiError extends Error {
+    constructor(message, status, payload = null) {
+      super(message);
+      this.name = "ApiError";
+      this.status = status;
+      this.payload = payload;
     }
+  }
 
-}
+  async function parseResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
+    let payload = null;
 
-// ==========================================
-// TOKEN MANAGEMENT
-// ==========================================
-
-function clearAccessToken() {
-
-    accessToken = null;
-
-    sessionStorage.removeItem(AUTH_TOKEN_KEY);
-
-}
-
-
-// ==========================================
-// API ERROR HANDLING
-// ==========================================
-
-async function getApiError(response) {
-
-    const data = await response.json().catch(() => ({}));
-
-    let detail = data.detail || "Request failed.";
-
-    if (Array.isArray(detail)) {
-
-        detail = detail.map(
-            item => item.msg || JSON.stringify(item)
-        ).join(", ");
-
+    if (contentType.includes("application/json")) {
+      payload = await response.json().catch(() => null);
+    } else {
+      const text = await response.text().catch(() => "");
+      payload = text ? { detail: text } : {};
     }
-
-    return String(detail);
-
-}
-
-
-// ==========================================
-// GET CURRENT USER
-// ==========================================
-
-async function getCurrentUser() {
-
-    if (!accessToken) {
-
-        throw new Error("Authentication required.");
-
-    }
-
-    const response = await fetch("/api/auth/me", {
-
-        method: "GET",
-
-        headers: {
-            "Authorization": `Bearer ${accessToken}`
-        }
-
-    });
 
     if (!response.ok) {
-
-        throw new Error(await getApiError(response));
-
+      let detail = payload?.detail || payload?.message || `Request failed (${response.status}).`;
+      if (Array.isArray(detail)) {
+        detail = detail.map((item) => item.msg || JSON.stringify(item)).join("; ");
+      }
+      throw new ApiError(String(detail), response.status, payload);
     }
 
-    return await response.json();
+    return payload ?? {};
+  }
 
-}
+  function setAuthMessage(message = "", type = "info") {
+    authMessage.textContent = message;
+    authMessage.dataset.type = type;
+  }
 
+  function showLogin(message = "", type = "info") {
+    loginForm.hidden = false;
+    registerForm.hidden = true;
+    setAuthMessage(message, type);
+  }
 
-// ==========================================
-// AUTHENTICATED API REQUEST
-// ==========================================
+  function showRegister() {
+    loginForm.hidden = true;
+    registerForm.hidden = false;
+    setAuthMessage("");
+  }
 
-async function authenticatedFetch(url, options = {}) {
+  function clearSession() {
+    accessToken = null;
+    sessionStorage.removeItem(TOKEN_KEY);
+  }
 
+  function showAuthentication(message = "", type = "info") {
+    appShell.hidden = true;
+    authScreen.hidden = false;
+    showLogin(message, type);
+    window.dispatchEvent(new CustomEvent("insight:unauthenticated"));
+  }
+
+  async function authenticatedFetch(url, options = {}) {
     if (!accessToken) {
-
-        showAuthScreen(
-            "Please log in to continue.",
-            "error"
-        );
-
-        throw new Error("Authentication required.");
-
+      showAuthentication("Please sign in to continue.", "error");
+      throw new ApiError("Authentication required.", 401);
     }
 
     const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${accessToken}`);
 
-    headers.set(
-        "Authorization",
-        `Bearer ${accessToken}`
-    );
+    const response = await fetch(url, { ...options, headers });
 
-    const response = await fetch(url, {
-
-        ...options,
-
-        headers
-
-    });
-
-
-    // Token expired, invalid or user no longer authenticated.
     if (response.status === 401) {
-
-        clearAccessToken();
-
-        showAuthScreen(
-            "Your session has expired. Please log in again.",
-            "error"
-        );
-
-        throw new Error("Authentication required.");
-
+      clearSession();
+      showAuthentication("Your session has expired. Please sign in again.", "error");
     }
 
     return response;
+  }
 
-}
+  async function getCurrentUser() {
+    const response = await authenticatedFetch("/api/auth/me");
+    return parseResponse(response);
+  }
 
+  async function showApplication(user) {
+    authScreen.hidden = true;
+    appShell.hidden = false;
+    $("currentUserLabel").textContent = user.username || user.email || "Account";
 
-// ==========================================
-// USER REGISTRATION
-// ==========================================
+    if (window.InsightApp?.onAuthenticated) {
+      await window.InsightApp.onAuthenticated(user);
+    }
+  }
 
-registerForm.addEventListener("submit", async event => {
-
+  loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-
-    const button = document.getElementById("registerButton");
-
+    const button = $("loginButton");
     button.disabled = true;
+    setAuthMessage("Signing in…");
 
-    setAuthMessage("Creating your account...");
+    const form = new URLSearchParams();
+    form.set("username", $("loginUsername").value.trim());
+    form.set("password", $("loginPassword").value);
+
+    try {
+      // FastAPI OAuth2PasswordRequestForm expects form-urlencoded data.
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: form
+      });
+      const data = await parseResponse(response);
+
+      if (!data.access_token) {
+        throw new ApiError("The server did not return an access token.", response.status);
+      }
+
+      accessToken = data.access_token;
+      sessionStorage.setItem(TOKEN_KEY, accessToken);
+
+      const user = await getCurrentUser();
+      loginForm.reset();
+      await showApplication(user);
+    } catch (error) {
+      clearSession();
+      showLogin(error.message || "Unable to sign in.", "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  registerForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = $("registerButton");
+    button.disabled = true;
+    setAuthMessage("Creating your account…");
 
     const payload = {
-
-        username: document
-            .getElementById("registerUsername")
-            .value.trim(),
-
-        email: document
-            .getElementById("registerEmail")
-            .value.trim(),
-
-        password: document
-            .getElementById("registerPassword")
-            .value
-
+      username: $("registerUsername").value.trim(),
+      email: $("registerEmail").value.trim(),
+      password: $("registerPassword").value
     };
 
-
     try {
-
-        const response = await fetch("/api/auth/register", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify(payload)
-
-        });
-
-
-        if (!response.ok) {
-
-            throw new Error(await getApiError(response));
-
-        }
-
-        registerForm.reset();
-
-        // Pre-fill the login username after registration.
-        document.getElementById("loginUsername").value =
-            payload.username;
-
-        showLoginForm(
-            "Registration successful. Please log in.",
-            "success"
-        );
-
-
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      await parseResponse(response);
+      registerForm.reset();
+      $("loginUsername").value = payload.username;
+      showLogin("Account created. Sign in to continue.", "success");
     } catch (error) {
-
-        setAuthMessage(error.message, "error");
-
+      setAuthMessage(error.message || "Unable to create account.", "error");
     } finally {
-
-        button.disabled = false;
-
+      button.disabled = false;
     }
-
-});
-
-
-// ==========================================
-// USER LOGIN
-// ==========================================
-
-loginForm.addEventListener("submit", async event => {
-
-    event.preventDefault();
-
-    const button = document.getElementById("loginButton");
-
-    button.disabled = true;
-
-    setAuthMessage("Logging in...");
-
-
-    const username = document
-        .getElementById("loginUsername")
-        .value.trim();
-
-    const password = document
-        .getElementById("loginPassword")
-        .value;
-
-
-    try {
-
-        // OAuth2PasswordRequestForm expects
-        // application/x-www-form-urlencoded.
-
-        const formData = new URLSearchParams();
-
-        formData.set("username", username);
-        formData.set("password", password);
-
-
-        const response = await fetch("/api/auth/login", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-
-            body: formData
-
-        });
-
-
-        if (!response.ok) {
-
-            throw new Error(await getApiError(response));
-
-        }
-
-
-        const data = await response.json();
-
-        if (!data.access_token) {
-
-            throw new Error("Access token was not returned by the server.");
-
-        }
-
-
-        // Store JWT in the current browser tab's session.
-        accessToken = data.access_token;
-
-        sessionStorage.setItem(
-            AUTH_TOKEN_KEY,
-            accessToken
-        );
-
-
-        // Validate the token and retrieve user information.
-        const user = await getCurrentUser();
-
-
-        // Show the main application.
-        showApplication(user);
-
-        loginForm.reset();
-
-
-    } catch (error) {
-
-        clearAccessToken();
-
-        showAuthScreen(error.message, "error");
-
-    } finally {
-
-        button.disabled = false;
-
-    }
-
-});
-
-
-// ==========================================
-// SWITCH BETWEEN LOGIN AND REGISTER
-// ==========================================
-
-document.getElementById("showRegister")
-    .addEventListener("click", showRegisterForm);
-
-
-document.getElementById("showLogin")
-    .addEventListener("click", () => {
-
-        showLoginForm();
-
-    });
-
-
-// ==========================================
-// LOGOUT
-// ==========================================
-
-document.getElementById("logoutButton")
-    .addEventListener("click", () => {
-
-        clearAccessToken();
-
-        // Reload the page to clear the previous UI state.
-        window.location.reload();
-
-    });
-
-
-// ==========================================
-// APPLICATION STARTUP
-// ==========================================
-
-async function initializeAuthentication() {
-
+  });
+
+  $("showRegister").addEventListener("click", showRegister);
+  $("showLogin").addEventListener("click", () => showLogin());
+
+  $("logoutButton").addEventListener("click", () => {
+    clearSession();
+    showAuthentication("You have signed out.", "info");
+  });
+
+  window.InsightAuth = Object.freeze({
+    authenticatedFetch,
+    parseResponse,
+    getCurrentUser,
+    getAccessToken: () => accessToken
+  });
+
+  async function initializeAuthentication() {
     if (!accessToken) {
-
-        showAuthScreen();
-
-        return;
-
+      showAuthentication();
+      return;
     }
-
 
     try {
-
-        // Validate an existing token after page refresh.
-        const user = await getCurrentUser();
-
-        showApplication(user);
-
-
+      const user = await getCurrentUser();
+      await showApplication(user);
     } catch (error) {
-
-        clearAccessToken();
-
-        showAuthScreen(
-            "Your session is invalid or has expired. Please log in again.",
-            "error"
-        );
-
+      clearSession();
+      showAuthentication("Your session is invalid or expired. Please sign in again.", "error");
     }
+  }
 
-}
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    initializeAuthentication
-);
+  document.addEventListener("DOMContentLoaded", initializeAuthentication);
+})();

@@ -1,8 +1,8 @@
 """initial database schema
 
-Revision ID: 993e76509b54
+Revision ID: 03d7822788a4
 Revises: 
-Create Date: 2026-11-09 17:36:55.829427
+Create Date: 2026-11-12 22:15:40.674019
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '993e76509b54'
+revision: str = '03d7822788a4'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -38,6 +38,9 @@ def upgrade() -> None:
     sa.Column('document_id', sa.String(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('filename', sa.String(), nullable=False),
+    sa.Column('file_path', sa.String(), nullable=True),
+    sa.Column('status', sa.String(length=30), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -61,6 +64,7 @@ def upgrade() -> None:
     sa.Column('completed_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('available_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('locked_until', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('lock_token', sa.String(length=36), nullable=True),
     sa.ForeignKeyConstraint(['document_record_id'], ['documents.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
@@ -68,6 +72,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_jobs_id'), 'jobs', ['id'], unique=False)
     op.create_index('ix_jobs_status_available', 'jobs', ['status', 'available_at'], unique=False)
+    op.create_index('ix_jobs_status_locked_until', 'jobs', ['status', 'locked_until'], unique=False)
     op.create_index('ix_jobs_user_created', 'jobs', ['user_id', 'created_at'], unique=False)
     op.create_index(op.f('ix_jobs_user_id'), 'jobs', ['user_id'], unique=False)
     op.create_table('idempotency_keys',
@@ -100,6 +105,7 @@ def downgrade() -> None:
     op.drop_table('idempotency_keys')
     op.drop_index(op.f('ix_jobs_user_id'), table_name='jobs')
     op.drop_index('ix_jobs_user_created', table_name='jobs')
+    op.drop_index('ix_jobs_status_locked_until', table_name='jobs')
     op.drop_index('ix_jobs_status_available', table_name='jobs')
     op.drop_index(op.f('ix_jobs_id'), table_name='jobs')
     op.drop_table('jobs')
