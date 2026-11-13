@@ -49,7 +49,7 @@ class Retriever:
         query: str,
         document_id: str,
         user_id: int,
-        top_k: int = 5,
+        top_k: Optional[int] = None,
         filter: Optional[dict] = None,
 
     ):
@@ -65,6 +65,9 @@ class Retriever:
 
         if not query or not query.strip():
             raise ValueError("Query cannot be empty.")
+
+        if top_k is None:
+            top_k = self.config["retrieve_k"]
 
         if top_k < 1:
             raise ValueError("top_k must be positive.")
