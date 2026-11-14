@@ -4,7 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -21,7 +21,11 @@ from workers.ingestion_worker import worker
 from src.embedding.embedding import EmbeddingModel
 from core.read_yaml import read_yaml
 from database.database import SessionLocal
-
+from observability.middleware import PrometheusMiddleware
+from prometheus_client import (
+    generate_latest,
+    CONTENT_TYPE_LATEST
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -146,7 +150,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
+app.middleware(PrometheusMiddleware)
 # Register routers.
 app.include_router(auth_router)
 app.include_router(router)
@@ -171,3 +175,13 @@ async def health_check():
         "status": "healthy",
         "application": "Insight-AI"
     }
+
+@app.get("/metrics", include_in_schema=False)
+def metrics_endpoint():
+
+    return Response(
+        content=generate_latest(),
+        headers={
+            "Content-Type": CONTENT_TYPE_LATEST
+        }
+    )

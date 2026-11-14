@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime
+
 
 
 @dataclass(frozen=True, slots=True)
@@ -11,3 +13,4 @@ class IngestionJobPayload:
     attempts: int
     max_attempts: int
     lock_token: str
+    created_at: datetime

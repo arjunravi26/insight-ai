@@ -1,14 +1,16 @@
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
-
 from sqlalchemy.orm import Session, sessionmaker
-
-from database.models import Document
 from repository.job_repository import JobRepository
 from repository.document_repository import DocumentRepository
 from schemas.ingestion_job import IngestionJobPayload
 
-
+from observability.metrics import (
+    RETRIES,
+    record_job_claim,
+    record_terminal_job,
+    record_error,
+)
 LEASE_SECONDS = 300
 
 
@@ -32,6 +34,8 @@ class IngestionJobService:
         self.lease_seconds = lease_seconds
 
     def claim_next_job(self):
+
+        payload = None
 
         with self.session_factory.begin() as db:
 
@@ -75,7 +79,7 @@ class IngestionJobService:
 
             document_repo.set_processing(document)
 
-            return IngestionJobPayload(
+            payload = IngestionJobPayload(
                 job_id=claimed["job_id"],
                 document_id=document.document_id,
                 user_id=document.user_id,
@@ -83,8 +87,12 @@ class IngestionJobService:
                 filename=document.filename,
                 attempts=claimed["attempts"],
                 max_attempts=claimed["max_attempts"],
-                lock_token=lock_token
+                lock_token=lock_token,
+                created_at=claimed["created_at"]
             )
+        record_job_claim(payload.created_at)
+
+        return payload
 
     def renew_lease(self, payload: IngestionJobPayload):
 
@@ -138,11 +146,19 @@ class IngestionJobService:
                     "Could not mark document as READY"
                 )
 
+        # This executes after the transaction commits.
+        record_terminal_job(
+            outcome="ready",
+            created_at=payload.created_at
+        )
+
     def mark_job_failed(
         self,
         payload: IngestionJobPayload,
         error_message: str
     ):
+
+        should_retry = False
 
         with self.session_factory.begin() as db:
 
@@ -175,7 +191,9 @@ class IngestionJobService:
 
                 next_status = "PENDING"
 
-                available_at = now + timedelta(seconds=delay)
+                available_at = now + timedelta(
+                    seconds=delay
+                )
 
             else:
 
@@ -209,3 +227,17 @@ class IngestionJobService:
                     raise RuntimeError(
                         "Could not mark document as FAILED"
                     )
+
+        # Only record retry or terminal failure after commit.
+        if should_retry:
+
+            RETRIES.labels(
+                component="ingestion"
+            ).inc()
+
+        else:
+
+            record_terminal_job(
+                outcome="failed",
+                created_at=payload.created_at
+            )

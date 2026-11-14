@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 
 from database.models import Document
 
-
 def get_owned_document(
     db: Session,
     document_id: str,

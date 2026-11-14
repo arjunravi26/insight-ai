@@ -1,0 +1,16 @@
+[
+  {
+    "question": "What is retrieval augmented generation?",
+    "reference": "RAG combines information retrieval with language generation.",
+    "reference_contexts": [
+      "Retrieval augmented generation combines a retrieval component with a language generation model."
+    ]
+  },
+  {
+    "question": "What is the purpose of chunking?",
+    "reference": "Chunking divides documents into smaller pieces for retrieval.",
+    "reference_contexts": [
+      "Document chunking splits large documents into smaller text segments to improve retrieval."
+    ]
+  }
+]
