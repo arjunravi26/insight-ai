@@ -1,12 +1,8 @@
 import json
 import re
 import logging
-
 from typing import Sequence
-
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
 from src.generation.models import CreateModels, Provider
 from src.generation.prompt import Prompt
 

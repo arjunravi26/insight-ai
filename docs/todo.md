@@ -8,3 +8,5 @@
 * Complete ragas
 * Guradials
 * Make chunk size based on score not fixed size
+* Concurrency and Scale
+* Make db to async db
