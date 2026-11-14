@@ -8,7 +8,7 @@ from langchain_mistralai import ChatMistralAI
 from langchain_groq import ChatGroq
 
 
-Provider = Literal["Gemini", "Mistral", "Together"]
+Provider = Literal["Gemini", "Mistral", "Groq"]
 
 
 class CreateModels:

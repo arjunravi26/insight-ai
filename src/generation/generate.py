@@ -33,14 +33,14 @@ class Generate:
         context, sources = self.prompt_generator.generate_prompt(
             query=query, retrieved_chunks=retrieved_chunks)
 
-        if not context:
-            return (
-                "I couldn't find relevant information in the uploaded documents to answer your question.",
-                [
-                    "Can you rephrase your question?",
-                    "Would you like to upload another document?"
-                ],
-            )
+        # if not context:
+        #     return (
+        #         "I couldn't find relevant information in the uploaded documents to answer your question.",
+        #         [
+        #             "Can you rephrase your question?",
+        #             "Would you like to upload another document?"
+        #         ],
+        #     )
 
         try:
             llm = self.model_factory.get_model(provider)

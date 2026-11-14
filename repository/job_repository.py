@@ -84,7 +84,8 @@ class JobRepository:
                 Job.job_id,
                 Job.document_record_id,
                 Job.attempts,
-                Job.max_attempts
+                Job.max_attempts,
+                Job.created_at
             )
         )
 

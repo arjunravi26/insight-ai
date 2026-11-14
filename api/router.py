@@ -78,6 +78,11 @@ async def upload_document(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    file_path: Path | None = None
+    temp_path: Path | None = None
+    document_record_created = False
+    document_id = None
+
 
     try:
         if not file.filename or not file.filename.lower().endswith(".pdf"):
@@ -85,9 +90,6 @@ async def upload_document(
                 status_code=400,
                 detail="Only PDF files are supported."
             )
-
-        file_path = None
-        document_record_created = False
 
         document_id = str(uuid.uuid4())
         job_id = str(uuid.uuid4())
@@ -162,6 +164,7 @@ async def upload_document(
         raise HTTPException(status_code=409, detail="Unable to save document.")
 
     except Exception:
+        db.rollback()
         await remove_files(temp_path)
 
         if document_record_created:
@@ -242,6 +245,9 @@ async def chat(
             answer=answer,
             follow_ups=follow_ups[:3] if follow_ups else []
         )
+
+    except HTTPException:
+        raise
 
     except ValueError as exc:
         raise HTTPException(

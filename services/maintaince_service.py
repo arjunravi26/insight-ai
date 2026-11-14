@@ -3,7 +3,6 @@ import logging
 import time
 
 from pathlib import Path
-
 from services.cleaning_service import file_cleanup
 
 from observability.metrics import (

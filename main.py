@@ -14,7 +14,7 @@ from api.auth import router as auth_router
 from services.ingestion_service import IngestionService
 from services.generation_service import GenerationService
 from services.ingestion_job_service import IngestionJobService
-from services.maintaince_service import maintance_service
+from services.maintaince_service import maintenance_service
 
 from workers.ingestion_worker import worker
 
@@ -83,7 +83,7 @@ async def lifespan(app: FastAPI):
 
         # 7. Start maintenance task.
         maintenance_task = asyncio.create_task(
-            maintance_service(UPLOAD_DIR),
+            maintenance_service(UPLOAD_DIR),
             name="upload-maintenance"
         )
 
@@ -150,7 +150,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.middleware(PrometheusMiddleware)
+app.add_middleware(PrometheusMiddleware)
 # Register routers.
 app.include_router(auth_router)
 app.include_router(router)

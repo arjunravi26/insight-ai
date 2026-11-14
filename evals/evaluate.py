@@ -9,6 +9,7 @@ from ragas.metrics import (
     NonLLMContextPrecisionWithReference,
     NonLLMContextRecall,
 )
+from core.read_yaml import read_yaml
 
 
 # --------------------------------------------------
@@ -18,7 +19,7 @@ from ragas.metrics import (
 with open("evals/dataset.json", "r", encoding="utf-8") as file:
     evaluation_data = json.load(file)
 
-
+config = read_yaml()
 # --------------------------------------------------
 # 2. Run your actual retriever
 # --------------------------------------------------
@@ -27,7 +28,7 @@ from services.generation_service import GenerationService
 
 # Initialize using your application's normal configuration.
 # Adapt initialization to your existing dependency setup.
-generation_service = GenerationService()
+generation_service = GenerationService(config=config)
 
 records = []
 
@@ -100,7 +101,7 @@ print("\nAverage retrieval scores:")
 print(
     results_df[
         [
-            "llm_context_precision_with_reference",
+            "non_llm_context_precision_with_reference",
             "non_llm_context_recall"
         ]
     ].mean()

@@ -1,9 +1,14 @@
-
+from pathlib import Path
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 
-DATABASE_URL = "sqlite:///./db/insight_ai.db"
+# DATABASE_URL = "sqlite:///./db/insight_ai.db"
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+DATABASE_PATH = BASE_DIR / "db" / "insight_ai.db"
+
+DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
 
 engine = create_engine(
